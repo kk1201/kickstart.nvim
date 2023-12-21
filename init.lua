@@ -44,6 +44,12 @@ P.S. You can delete this when you're done too. It's your config now :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Disable netrw for nvim-tree
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+vim.o.shell = "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    https://github.com/folke/lazy.nvim
 --    `:help lazy.nvim.txt` for more info
@@ -245,6 +251,7 @@ require('lazy').setup({
     },
   },
 
+  
   {
     -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
@@ -253,6 +260,8 @@ require('lazy').setup({
     },
     build = ':TSUpdate',
   },
+
+
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -266,7 +275,7 @@ require('lazy').setup({
   --    Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --
   --    For additional information see: https://github.com/folke/lazy.nvim#-structuring-your-plugins
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
 }, {})
 
 -- [[ Setting options ]]
@@ -428,7 +437,9 @@ vim.defer_fn(function()
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
 
-    highlight = { enable = true },
+    highlight = {
+      enable = true
+    },
     indent = { enable = true },
     incremental_selection = {
       enable = true,
@@ -659,3 +670,215 @@ cmp.setup {
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+-- ---------- --
+-- require("mason-nvim-dap").setup()
+local dap = require("dap")
+
+dap.adapters.cppdbg = {
+  id = 'cppdbg',
+  type = 'executable',
+  command = 'C:\\Users\\k\\AppData\\Local\\nvim-data\\mason\\packages\\cpptools\\extension\\debugAdapters\\bin\\OpenDebugAD7.exe',
+  options = {
+    detached = false
+  }
+}
+
+local lastProgram
+local previousCwd
+vim.g.c_syntax_for_h = 1
+dap.configurations.c = {
+  {
+    name = "Launch file",
+    type = "cppdbg",
+    request = "launch",
+    console = "integratedTerminal",
+    program = function()
+      local folderName
+      for w in string.gmatch(vim.fn.getcwd(), "[^\\]+") do
+        if w ~= nil then
+          folderName = w
+        end
+      end
+      print(folderName)
+
+      if folderName == "src" then
+        previousCwd = vim.fn.getcwd()
+        vim.api.nvim_set_current_dir(vim.fn.expand('../build'))
+      else
+        previousCwd = vim.fn.getcwd()
+        -- local buildDir = vim.fn.systemlist('Get-ChildItem -Path ' .. vim.fn.getcwd() .. ' build -recurse -Name')[1]
+        local buildDir = vim.fn.system("Get-ChildItem -Path F:\\learning\\LearnOpenGL\\Mingw build -recurse")
+        -- print(buildDir .. " " .. previousCwd)
+        print("current dir: " .. previousCwd)
+        print("build dir: " .. buildDir)
+        vim.api.nvim_set_current_dir(buildDir);
+      end
+
+      lastProgram = vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+      return lastProgram -- vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    cwd = function()
+      if '${workspaceFolderBasename}' == "src" then
+        vim.api.nvim_set_current_dir(vim.fn.expand('../build'))
+        return vim.fn.getcwd()
+      else
+        return vim.fn.getcwd()
+      end
+    end,
+    stopAtEntry = true,
+    setupCommands = {
+      {
+         text = '-enable-pretty-printing',
+         description =  'enable pretty printing',
+         ignoreFailures = false
+      },
+    },
+  },
+
+  {
+    name = "Launch last file",
+    type = "cppdbg",
+    request = "launch",
+    program = function()
+      return lastProgram
+    end,
+    cwd = '${workspaceFolder}',
+    stopAtEntry = true,
+    -- setupCommands = {  
+    --   { 
+    --      text = '-enable-pretty-printing',
+    --      description =  'enable pretty printing',
+    --      ignoreFailures = false 
+    --   },
+    -- }
+  },
+
+  {
+    name = 'Attach to gdbserver :1234',
+    type = 'cppdbg',
+    request = 'launch',
+    MIMode = 'gdb',
+    miDebuggerServerAddress = 'localhost:1234',
+    miDebuggerPath = 'C:\\msys64\\ucrt64\\bin\\gdb.exe',
+    cwd = '${workspaceFolder}',
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    -- setupCommands =   {
+    --   { 
+    --      text = '-enable-pretty-printing',
+    --      description =  'enable pretty printing',
+    --      ignoreFailures = false 
+    --   },
+    -- },
+  },
+
+}
+dap.configurations.cpp = dap.configurations.c
+
+require("dapui").setup()
+local dapui = require("dapui")
+dapui.setup( { element_mappings = { stacks = { open = { "<2-LeftMouse>", "<CR>" }}}})
+dap.listeners.after.event_initialized["dapui_config"] = function()
+  dapui.open()
+end
+dap.listeners.before.event_terminated["dapui_config"] = function()
+  dapui.close()
+  vim.api.nvim_set_current_dir(previousCwd)
+end
+dap.listeners.before.event_exited["dapui_config"] = function()
+  dapui.close()
+  vim.api.nvim_set_current_dir(previousCwd)
+end
+
+local workspaces = require("workspaces")
+local treeApi = require("nvim-tree.api")
+
+workspaces.setup()
+require("sessions").setup()
+require("nvim-tree").setup(
+  {
+    sync_root_with_cwd = true
+  })
+
+-- require("autoclose").setup()
+
+-- universal ctags for tagbar 
+vim.g.tagbar_ctags_bin = [[C:\Users\k\AppData\Local\nvim\bins\universal-ctags\ctags.exe]]
+
+-- Automatic search highlight switching
+local ns = vim.api.nvim_create_namespace('toggle_hlsearch')
+
+local function toggle_hlsearch(char)
+  if vim.fn.mode() == 'n' then
+    local keys = { '<CR>', 'n', 'N', '*', '#', '?', '/' }
+    local new_hlsearch = vim.tbl_contains(keys, vim.fn.keytrans(char))
+
+    if vim.opt.hlsearch:get() ~= new_hlsearch then
+      vim.opt.hlsearch = new_hlsearch
+    end
+  end
+end
+
+vim.on_key(toggle_hlsearch, ns)
+
+
+-- Table length calculation (for workspaces.add;)
+local function tableLength(t)
+  local count = 0
+  for _ in pairs(t) do count = count + 1 end
+  return count
+end
+
+-- Workspaces shorthand user commands
+vim.api.nvim_create_user_command('Wsa', function(opts)
+  local argLength = tableLength(opts.fargs)
+  if argLength == 0 then
+    workspaces.add()
+  elseif argLength == 1 then
+    workspaces.add(opts.fargs[1])
+  elseif argLength == 2 then
+    workspaces.add(opts.fargs[1], opts.fargs[2])
+  else
+    print(string.format("wrong number of arguments: %s", argLength))
+  end
+end, { nargs='*' })
+
+vim.api.nvim_create_user_command('Wso', function(opts)
+  if opts.args == '' then
+    workspaces.open()
+  else
+    workspaces.open(opts.args)
+  end
+end, { nargs='?' })
+
+vim.api.nvim_create_user_command('Wsr', function(opts)
+  if opts.args == '' then
+    workspaces.remove()
+  else
+    workspaces.remove(opts.args)
+  end
+end, { nargs='?' })
+
+vim.api.nvim_create_user_command('Tsb', 'tab sb', {})
+vim.api.nvim_create_user_command('Conf', string.format("tabe %s/init.lua", vim.fn.stdpath('config')), {})
+vim.keymap.set('n', 'gh', function() vim.api.nvim_command('ClangdSwitchSourceHeader') end)
+vim.keymap.set('n', ';', ':')
+vim.keymap.set('n', '<leader> cd', function() vim.api.nvim_set_current_dir(vim.fn.expand('%:h')) end)
+vim.keymap.set('n', '<F5>', function() treeApi.tree.toggle() end)
+vim.keymap.set('n', '<C-F5>', function() treeApi.tree.find_file(vim.fn.expand('%:p')) end)
+vim.keymap.set('n', '<F6>', function() vim.fn['tagbar#ToggleWindow']() end)
+vim.keymap.set('n', '<C-w><C-f>', '<C-w>vgf <C-w>L', { noremap = true })
+vim.keymap.set('n', '<leader>db', '<cmd> DapToggleBreakpoint <CR>', { noremap = true })
+vim.keymap.set('n', '<F7>', '<cmd> DapContinue <CR>', { noremap = true })
+vim.keymap.set('n', '<F9>', '<cmd> DapToggleBreakpoint <CR>', { noremap = true })
+vim.keymap.set('n', '<F10>', '<cmd> DapStepOver <CR>', { noremap = true })
+vim.keymap.set('n', '<F11>', '<cmd> DapStepInto <CR>', { noremap = true })
+vim.keymap.set('n', '<S-F11>', '<cmd> DapStepOut <CR>', { noremap = true })
+vim.keymap.set('n', '<S-PageDown>', '<cmd> :bnext <CR>', { noremap = true })
+vim.keymap.set('n', '<S-PageUp>', '<cmd> :bprevious <CR>', { noremap = true })
+vim.keymap.set('n', '<leader>dt', function() require("dapui").float_element('stacks', { width = 20, height = 10, enter = true, position = nil}) end)
+vim.keymap.set('n', '<leader>sb', function() require("buffer_manager.ui").toggle_quick_menu() end)
+vim.keymap.set('i', '<S-Insert>', '<C-R>+', { noremap = true, silent = true })
+vim.keymap.set('n', '<S-Insert>', '"+p', { noremap = true, silent = true })
