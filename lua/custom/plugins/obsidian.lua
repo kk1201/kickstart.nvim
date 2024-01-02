@@ -22,4 +22,5 @@ return {
   --     opts = { noremap = false, expr = true, buffer = true }
   --   }
   -- }
+  vim.keymap.set('n', '<leader>so', '<cmd>ObsidianSearch<CR>', { desc = '[S]earch [O]bsidian Note' })
 }
