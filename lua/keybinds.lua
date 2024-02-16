@@ -32,7 +32,7 @@ require('telescope').setup {
     mappings = {
       i = {
         ['<C-u>'] = false,
-        ['<C-d>'] = false,
+        ['<C-d>'] = "delete_buffer",
       },
     },
   },
@@ -121,27 +121,30 @@ end
 
 vim.on_key(toggle_hlsearch, ns)
 
-require("nvim-tree").setup()
--- local treeApi = require("nvim-tree.api")
-
+-- [[ My Keybinds ]]
+vim.keymap.set('n', ';', ':')
 vim.api.nvim_create_user_command('Tsb', 'tab sb', {})
 vim.api.nvim_create_user_command('Conf', string.format("tabe %s/init.lua", vim.fn.stdpath('config')), {})
-vim.keymap.set('n', 'gh', function() vim.api.nvim_command('ClangdSwitchSourceHeader') end)
-vim.keymap.set('n', ';', ':')
-vim.keymap.set('n', '<leader>tc', '<cmd> tcd %:p:h <CR>', { noremap = true })
--- vim.keymap.set('n', '<F5>', function() treeApi.tree.toggle() end)
--- vim.keymap.set('n', '<C-F5>', function() treeApi.tree.find_file(vim.fn.expand('%:p')) end)
-vim.keymap.set('n', '<F6>', function() vim.fn['tagbar#ToggleWindow']() end)
-vim.keymap.set('n', '<C-w><C-f>', '<C-w>vgf <C-w>L', { noremap = true })
+
+-- Navigation
+local treeApi = require("nvim-tree.api")
 vim.keymap.set('n', 'gf',
-  function()
+    function()
     if require("obsidian").util.cursor_on_markdown_link() then
-      return "<cmd>ObsidianFollowLink<CR>"
-    else
+        return "<cmd>ObsidianFollowLink<CR>"
+      else
       return "gf"
-    end
+      end
   end, { noremap = false, expr = true }
 )
+vim.keymap.set('n', 'gh', function() vim.api.nvim_command('ClangdSwitchSourceHeader') end)
+vim.keymap.set('n', '<C-w><C-f>', '<C-w>vgf <C-w>L', { noremap = true })
+vim.keymap.set('n', '<leader>tc', '<cmd> tcd %:p:h <CR>', { noremap = true })
+vim.keymap.set('n', '<F5>', function() treeApi.tree.toggle() end)
+vim.keymap.set('n', '<C-F5>', function() treeApi.tree.change_root(vim.fn.expand("%:h")) end)
+vim.keymap.set('n', '<F6>', function() vim.fn['tagbar#ToggleWindow']() end)
+
+-- Nvim DAP Commands
 vim.keymap.set('n', '<leader>db', '<cmd> DapToggleBreakpoint <CR>', { noremap = true })
 vim.keymap.set('n', '<F7>', '<cmd> DapContinue <CR>', { noremap = true })
 vim.keymap.set('n', '<F9>', '<cmd> DapToggleBreakpoint <CR>', { noremap = true })
@@ -153,24 +156,12 @@ vim.keymap.set('n', '<S-PageUp>', '<cmd> :bprevious <CR>', { noremap = true })
 vim.keymap.set('n', '<leader>dt', function()
     require("dapui").float_element('stacks', { width = 20, height = 10, enter = true, position = nil })
   end)
-vim.keymap.set('n', '<leader>sb', function()
-    require("buffer_manager.ui").toggle_quick_menu()
-  end)
-vim.keymap.set('i', '<S-Insert>', '<C-R>+', { noremap = true, silent = true })
-vim.keymap.set('n', '<S-Insert>', '"+p', { noremap = true, silent = true })
+
+-- Extra Telescope Views
 vim.keymap.set('n', '<leader>tlb', function()
   require('telescope.builtin').buffers({ only_cwd = vim.fn.haslocaldir() == 1 })
   end)
-vim.keymap.set('n', "<leader>hrp", function()
-  local function callback(input)
-    if (input ~= nil) then
-      local num = tonumber(input)
-      if (num ~= nil) then
-        require("harpoon.ui").nav_file(input)
-      end
-    end
-  end
-  vim.ui.input( { prompt = "Where to?: "}, callback)
-end)
-vim.keymap.set('n', "<leader><F1>", function() require("harpoon.ui").toggle_quick_menu() end)
-vim.keymap.set('n', "<leader><F2>", function() require("harpoon.mark").toggle_file() end)
+
+-- Share clipboard buffer with outside programs
+vim.keymap.set('i', '<S-Insert>', '<C-R>+', { noremap = true, silent = true })
+vim.keymap.set('n', '<S-Insert>', '"+p', { noremap = true, silent = true })
