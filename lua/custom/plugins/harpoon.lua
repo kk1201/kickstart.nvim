@@ -4,11 +4,12 @@ return {
   branch = "harpoon2",
   dependencies = { "nvim-lua/plenary.nvim" },
   opts = { tabline = true },
-  config = function() 
+  config = function()
     local harpoon = require("harpoon")
     harpoon:setup({ settings = { save_on_toggle = true, sync_on_ui_close = true } })
 
     vim.keymap.set("n", "<leader><F1>", function() harpoon:list():append() end)
+    vim.keymap.set("n", "<leader><F2>", function() harpoon:list():remove() end)
     vim.keymap.set("n", "<C-e>", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
 
     vim.keymap.set("n", "<C-1>", function() harpoon:list():select(1) end)
