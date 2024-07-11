@@ -104,6 +104,8 @@ vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc
 vim.keymap.set('n', '<leader>sG', ':LiveGrepGitRoot<cr>', { desc = '[S]earch by [G]rep on Git Root' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
+vim.keymap.set('n', '<leader>sC', require('telescope.builtin').git_bcommits, { desc = '[S]earch b[C]ommits' })
+vim.keymap.set('n', '<leader>sc', require('telescope.builtin').git_commits, { desc = '[S]earch [C]ommits' })
 
 -- Automatic search highlight switching
 local ns = vim.api.nvim_create_namespace('toggle_hlsearch')
@@ -126,22 +128,11 @@ vim.keymap.set('n', ';', ':')
 vim.api.nvim_create_user_command('Tsb', 'tab sb', {})
 vim.api.nvim_create_user_command('Conf', string.format("tabe %s/init.lua", vim.fn.stdpath('config')), {})
 
--- Navigation
-local treeApi = require("nvim-tree.api")
-vim.keymap.set('n', 'gf',
-    function()
-    if require("obsidian").util.cursor_on_markdown_link() then
-        return "<cmd>ObsidianFollowLink<CR>"
-      else
-      return "gf"
-      end
-  end, { noremap = false, expr = true }
-)
 vim.keymap.set('n', 'gh', function() vim.api.nvim_command('ClangdSwitchSourceHeader') end)
 vim.keymap.set('n', '<C-w><C-f>', '<C-w>vgf <C-w>L', { noremap = true })
 vim.keymap.set('n', '<leader>tc', '<cmd> tcd %:p:h <CR>', { noremap = true })
 vim.keymap.set('n', '<F5>', function() treeApi.tree.toggle() end)
-vim.keymap.set('n', '<C-F5>', function() treeApi.tree.change_root(vim.fn.expand("%:h")) end)
+-- vim.keymap.set('n', '<C-F5>', function() treeApi.tree.change_root(vim.fn.expand("%:h")) end)
 vim.keymap.set('n', '<F6>', function() vim.fn['tagbar#ToggleWindow']() end)
 
 -- Nvim DAP Commands
@@ -154,13 +145,13 @@ vim.keymap.set('n', '<S-F11>', '<cmd> DapStepOut <CR>', { noremap = true })
 vim.keymap.set('n', '<S-PageDown>', '<cmd> :bnext <CR>', { noremap = true })
 vim.keymap.set('n', '<S-PageUp>', '<cmd> :bprevious <CR>', { noremap = true })
 vim.keymap.set('n', '<leader>dt', function()
-    require("dapui").float_element('stacks', { width = 20, height = 10, enter = true, position = nil })
-  end)
+  require("dapui").float_element('stacks', { width = 20, height = 10, enter = true, position = nil })
+end)
 
 -- Extra Telescope Views
 vim.keymap.set('n', '<leader>tlb', function()
   require('telescope.builtin').buffers({ only_cwd = vim.fn.haslocaldir() == 1 })
-  end)
+end)
 
 -- Share clipboard buffer with outside programs
 vim.keymap.set('i', '<S-Insert>', '<C-R>+', { noremap = true, silent = true })
